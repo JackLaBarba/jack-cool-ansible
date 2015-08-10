@@ -1,9 +1,28 @@
-#! /usr/bin/env bash
-set -e
+#!/usr/bin/env bash
+set -o pipefail
+IFS=$'\n\t'
 
-SCRIPT_PATH=$(dirname $0)
-PROJECT_PATH="$SCRIPT_PATH/.."
+SCRIPT_DIR=`dirname "$0"`
+PROJECT_DIR="$SCRIPT_DIR/.."
 
-virtualenv "$PROJECT_PATH/venv"
-source "$PROJECT_PATH/venv/bin/activate"
-pip install -r "$PROJECT_PATH/requirements.txt"
+type pip > /dev/null || NO_PIP=1
+if [ $NO_PIP ]; then
+  echo "You need to install pip!"
+  echo " try 'sudo apt-get install pip' if you're on ubuntu."
+  echo " try 'brew install python' if you're on a mac."
+  exit 1
+fi
+
+type virtualenv > /dev/null || NO_VIRTUALENV=1
+if [ $NO_VIRTUALENV ]; then
+  echo "Installing virtualenv..."
+  sudo pip install virtualenv
+fi
+
+if [ ! -d "$PROJECT_DIR/env" ]; then
+  echo "Creating environment..."
+  virtualenv "$PROJECT_DIR/env"
+fi
+
+source "$PROJECT_DIR/env/bin/activate"
+pip install --allow-external mysql-connector-python -r requirements.txt
